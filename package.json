@@ -1,0 +1,36 @@
+{
+  "name": "layagen-ai",
+  "version": "0.1.0",
+  "description": "AI-powered LayaAir H5 game generator from natural language descriptions",
+  "author": "LayaGen Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/layagen-ai.git"
+  },
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "eslint packages/",
+    "typecheck": "pnpm -r typecheck",
+    "dev": "pnpm --filter @layagen/cli dev",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm build && changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.0",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.3.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

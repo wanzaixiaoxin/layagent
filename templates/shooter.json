@@ -1,0 +1,63 @@
+{
+  "id": "template-shooter",
+  "name": "射击游戏",
+  "genre": "shooter",
+  "dimension": "2d",
+  "description": "弹幕射击、塔防射击或平面射击游戏",
+  "complexity": "medium",
+  "defaultScenes": [
+    { "name": "StartScene", "type": "2d", "description": "开始菜单" },
+    { "name": "MainScene", "type": "2d", "description": "游戏主场景" },
+    { "name": "ShopScene", "type": "2d", "description": "武器商店" },
+    { "name": "GameOverScene", "type": "2d", "description": "游戏结束" }
+  ],
+  "defaultComponents": [
+    "PlayerShooter",
+    "Enemy",
+    "Bullet",
+    "WeaponSystem",
+    "SpawnManager",
+    "WaveManager",
+    "UpgradeSystem"
+  ],
+  "defaultResources": {
+    "characters": [
+      { "id": "player_ship", "name": "玩家飞船", "type": "sprite_sheet", "description": "科幻风格的玩家飞船", "frames": 4 },
+      { "id": "enemy_basic", "name": "基础敌人", "type": "sprite_sheet", "description": "基础敌人战机", "frames": 4 },
+      { "id": "enemy_boss", "name": "Boss", "type": "sprite_sheet", "description": "大型Boss敌人", "frames": 8 }
+    ],
+    "backgrounds": [
+      { "id": "bg_space", "name": "太空背景", "type": "parallax", "description": "星空滚动背景", "layers": 3 }
+    ],
+    "items": [
+      { "id": "powerup_weapon", "name": "武器升级", "type": "animated", "description": "武器升级道具" },
+      { "id": "powerup_shield", "name": "护盾", "type": "animated", "description": "护盾道具" }
+    ],
+    "effects": [
+      { "id": "fx_explosion", "name": "爆炸特效", "type": "particle", "description": "敌机爆炸粒子效果" },
+      { "id": "fx_muzzle", "name": "枪口火焰", "type": "particle", "description": "发射子弹时的火焰效果" }
+    ],
+    "uiElements": [
+      { "id": "btn_start", "name": "开始按钮", "type": "9slice", "description": "战斗开始按钮" },
+      { "id": "health_bar", "name": "血条", "type": "9slice", "description": "玩家生命值条" },
+      { "id": "weapon_panel", "name": "武器面板", "type": "9slice", "description": "当前武器显示" },
+      { "id": "score_display", "name": "分数显示", "type": "static_image", "description": "分数和连击数" }
+    ],
+    "audio": [
+      { "id": "bgm", "name": "背景音乐", "type": "audio", "description": "激昂的战斗音乐" },
+      { "id": "sfx_shoot", "name": "射击音效", "type": "audio", "description": "子弹发射音效" },
+      { "id": "sfx_explosion", "name": "爆炸音效", "type": "audio", "description": "爆炸音效" }
+    ]
+  },
+  "physics": {
+    "enabled": true,
+    "engine": "box2d",
+    "gravity": { "x": 0, "y": 0 }
+  },
+  "styleGuide": {
+    "recommendedStyle": "科幻像素/矢量风格",
+    "recommendedPalette": ["#0D1B2A", "#1B263B", "#415A77", "#778DA9", "#E0E1DD"],
+    "characterStyle": "科幻载具/飞船",
+    "backgroundStyle": "深邃太空场景"
+  }
+}

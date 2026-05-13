@@ -1,0 +1,58 @@
+{
+  "id": "template-platformer",
+  "name": "横版闯关",
+  "genre": "platformer",
+  "dimension": "2d",
+  "description": "经典的横版跳跃闯关游戏，玩家控制角色在平台上跳跃前进",
+  "complexity": "medium",
+  "defaultScenes": [
+    { "name": "StartScene", "type": "2d", "description": "开始菜单场景" },
+    { "name": "MainScene", "type": "2d", "description": "主游戏场景" },
+    { "name": "GameOverScene", "type": "2d", "description": "游戏结束场景" }
+  ],
+  "defaultComponents": [
+    "PlayerController",
+    "CameraFollow",
+    "GameManager",
+    "ItemCollector",
+    "Obstacle",
+    "SceneTransition"
+  ],
+  "defaultResources": {
+    "characters": [
+      { "id": "player", "name": "玩家角色", "type": "sprite_sheet", "description": "主角角色，包含待机动画、跑步动画、跳跃动画", "frames": 8 }
+    ],
+    "backgrounds": [
+      { "id": "bg_main", "name": "主背景", "type": "parallax", "description": "三层视差滚动背景", "layers": 3 }
+    ],
+    "items": [
+      { "id": "coin", "name": "金币", "type": "static_image", "description": "收集用的金币" },
+      { "id": "gem", "name": "宝石", "type": "static_image", "description": "高价值收集品" }
+    ],
+    "effects": [
+      { "id": "fx_collect", "name": "收集特效", "type": "particle", "description": "收集物品时的粒子特效" }
+    ],
+    "uiElements": [
+      { "id": "btn_start", "name": "开始按钮", "type": "9slice", "description": "绿色圆形开始按钮" },
+      { "id": "btn_pause", "name": "暂停按钮", "type": "9slice", "description": "暂停控制按钮" },
+      { "id": "score_label", "name": "分数显示", "type": "static_image", "description": "分数数字显示区域" },
+      { "id": "panel_pause", "name": "暂停面板", "type": "9slice", "description": "半透明暂停菜单面板" }
+    ],
+    "audio": [
+      { "id": "bgm", "name": "背景音乐", "type": "audio", "description": "轻快活泼的游戏背景音乐" },
+      { "id": "sfx_jump", "name": "跳跃音效", "type": "audio", "description": "角色跳跃时的音效" },
+      { "id": "sfx_collect", "name": "收集音效", "type": "audio", "description": "收集金币时的音效" }
+    ]
+  },
+  "physics": {
+    "enabled": true,
+    "engine": "box2d",
+    "gravity": { "x": 0, "y": 9.8 }
+  },
+  "styleGuide": {
+    "recommendedStyle": "卡通风格",
+    "recommendedPalette": ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#95E1D3"],
+    "characterStyle": "2头身Q版角色",
+    "backgroundStyle": "多层视差背景"
+  }
+}

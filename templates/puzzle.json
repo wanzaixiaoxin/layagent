@@ -1,0 +1,55 @@
+{
+  "id": "template-puzzle",
+  "name": "益智解谜",
+  "genre": "puzzle",
+  "dimension": "2d",
+  "description": "各种益智解谜玩法，如消除、拼图、华容道等",
+  "complexity": "simple",
+  "defaultScenes": [
+    { "name": "StartScene", "type": "2d", "description": "开始菜单" },
+    { "name": "LevelSelectScene", "type": "2d", "description": "关卡选择" },
+    { "name": "GameScene", "type": "2d", "description": "游戏主场景" },
+    { "name": "ResultScene", "type": "2d", "description": "结算场景" }
+  ],
+  "defaultComponents": [
+    "PuzzleBoard",
+    "Piece",
+    "Timer",
+    "ScoreManager",
+    "HintSystem",
+    "StarRating"
+  ],
+  "defaultResources": {
+    "characters": [],
+    "backgrounds": [
+      { "id": "bg_main", "name": "主背景", "type": "static_image", "description": "简洁清新的游戏背景" }
+    ],
+    "items": [
+      { "id": "puzzle_piece", "name": "拼图块", "type": "static_image", "description": "拼图/消除的基本元素" },
+      { "id": "puzzle_block", "name": "方块", "type": "static_image", "description": "方块元素，多种颜色变体" }
+    ],
+    "effects": [
+      { "id": "fx_match", "name": "消除特效", "type": "particle", "description": "匹配消除时的粒子效果" },
+      { "id": "fx_combo", "name": "连击特效", "type": "particle", "description": "连击时的屏幕特效" }
+    ],
+    "uiElements": [
+      { "id": "btn_play", "name": "开始按钮", "type": "9slice", "description": "开始游戏按钮" },
+      { "id": "btn_hint", "name": "提示按钮", "type": "9slice", "description": "提示功能按钮" },
+      { "id": "btn_pause", "name": "暂停按钮", "type": "9slice", "description": "暂停按钮" },
+      { "id": "timer_display", "name": "计时器", "type": "static_image", "description": "倒计时显示" },
+      { "id": "score_panel", "name": "分数面板", "type": "9slice", "description": "分数显示面板" }
+    ],
+    "audio": [
+      { "id": "bgm", "name": "背景音乐", "type": "audio", "description": "轻松舒缓的背景音乐" },
+      { "id": "sfx_match", "name": "匹配音效", "type": "audio", "description": "成功匹配时的清脆音效" },
+      { "id": "sfx_combo", "name": "连击音效", "type": "audio", "description": "连击时的上升音效" }
+    ]
+  },
+  "physics": { "enabled": false },
+  "styleGuide": {
+    "recommendedStyle": "扁平化设计",
+    "recommendedPalette": ["#A8E6CF", "#DCEDC1", "#FFD3B6", "#FFAAA5", "#FF8B94"],
+    "characterStyle": "几何形状为主",
+    "backgroundStyle": "简洁纯色或轻微纹理"
+  }
+}

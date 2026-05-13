@@ -1,0 +1,25 @@
+{
+  "name": "{{gameName}}",
+  "version": "1.0.0",
+  "engineVersion": "3.2.0",
+  "screenOrientation": "landscape",
+  "resolution": {
+    "width": 1080,
+    "height": 1920
+  },
+  "physics": {
+    "enabled": true,
+    "engine": "box2d",
+    "gravity": { "x": 0, "y": 9.8 }
+  },
+  "rendering": {
+    "antialias": true,
+    "pixelArt": false
+  },
+  "scenes": [],
+  "imports": [
+    "laya.core",
+    "laya.ui",
+    "laya.physics"
+  ]
+}

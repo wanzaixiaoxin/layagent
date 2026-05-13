@@ -1,0 +1,75 @@
+{
+  "id": "template-rpg",
+  "name": "角色扮演",
+  "genre": "rpg",
+  "dimension": "2d",
+  "description": "角色扮演冒险游戏，包含任务系统、战斗系统和角色成长",
+  "complexity": "complex",
+  "defaultScenes": [
+    { "name": "TitleScene", "type": "2d", "description": "标题画面" },
+    { "name": "WorldMapScene", "type": "2d", "description": "世界地图" },
+    { "name": "TownScene", "type": "2d", "description": "城镇场景" },
+    { "name": "DungeonScene", "type": "2d", "description": "地下城战斗" },
+    { "name": "BattleScene", "type": "2d", "description": "战斗场景" },
+    { "name": "InventoryScene", "type": "2d", "description": "背包界面" },
+    { "name": "DialogueScene", "type": "2d", "description": "对话场景" }
+  ],
+  "defaultComponents": [
+    "PlayerCharacter",
+    "NPC",
+    "QuestManager",
+    "InventorySystem",
+    "DialogueSystem",
+    "BattleSystem",
+    "SkillTree",
+    "EquipmentManager",
+    "SaveLoadSystem"
+  ],
+  "defaultResources": {
+    "characters": [
+      { "id": "hero", "name": "主角", "type": "sprite_sheet", "description": "游戏主角，四方向行走动画", "frames": 12 },
+      { "id": "npc_villager", "name": "村民NPC", "type": "sprite_sheet", "description": "城镇居民NPC", "frames": 4 },
+      { "id": "enemy_slime", "name": "史莱姆", "type": "sprite_sheet", "description": "基础怪物史莱姆", "frames": 4 }
+    ],
+    "backgrounds": [
+      { "id": "bg_grassland", "name": "草原", "type": "static_image", "description": "世界地图草原区域" },
+      { "id": "bg_town", "name": "城镇", "type": "static_image", "description": "城镇场景背景" },
+      { "id": "bg_dungeon", "name": "地下城", "type": "static_image", "description": "地下城内部场景" }
+    ],
+    "items": [
+      { "id": "potion_red", "name": "生命药水", "type": "static_image", "description": "恢复生命值的红色药水" },
+      { "id": "sword_iron", "name": "铁剑", "type": "static_image", "description": "基础武器铁剑" },
+      { "id": "armor_leather", "name": "皮甲", "type": "static_image", "description": "基础防具皮甲" }
+    ],
+    "effects": [
+      { "id": "fx_attack", "name": "攻击特效", "type": "particle", "description": "普通攻击挥砍特效" },
+      { "id": "fx_magic", "name": "魔法特效", "type": "particle", "description": "魔法施放粒子效果" },
+      { "id": "fx_levelup", "name": "升级特效", "type": "particle", "description": "升级时的光环特效" }
+    ],
+    "uiElements": [
+      { "id": "dialogue_box", "name": "对话框", "type": "9slice", "description": "NPC对话显示框" },
+      { "id": "inventory_grid", "name": "背包格子", "type": "9slice", "description": "背包物品格子" },
+      { "id": "health_bar", "name": "血条", "type": "9slice", "description": "角色生命值条" },
+      { "id": "mana_bar", "name": "蓝条", "type": "9slice", "description": "角色魔法值条" },
+      { "id": "minimap", "name": "小地图", "type": "static_image", "description": "右上角小地图" }
+    ],
+    "audio": [
+      { "id": "bgm_field", "name": "野外BGM", "type": "audio", "description": "野外探索背景音乐" },
+      { "id": "bgm_battle", "name": "战斗BGM", "type": "audio", "description": "战斗场景音乐" },
+      { "id": "bgm_town", "name": "城镇BGM", "type": "audio", "description": "城镇背景音乐" },
+      { "id": "sfx_attack", "name": "攻击音效", "type": "audio", "description": "武器挥砍音效" },
+      { "id": "sfx_item", "name": "物品音效", "type": "audio", "description": "获得物品音效" }
+    ]
+  },
+  "physics": {
+    "enabled": true,
+    "engine": "box2d",
+    "gravity": { "x": 0, "y": 0 }
+  },
+  "styleGuide": {
+    "recommendedStyle": "日式像素/2D手绘风格",
+    "recommendedPalette": ["#2D3436", "#636E72", "#B2BEC3", "#DFE6E9", "#74B9FF"],
+    "characterStyle": "经典日式RPG角色",
+    "backgroundStyle": "手绘地图和场景"
+  }
+}

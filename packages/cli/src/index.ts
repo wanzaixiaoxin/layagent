@@ -8,6 +8,7 @@ import { buildCommand } from "./commands/build.js";
 import { previewCommand } from "./commands/preview.js";
 import { interactiveCommand } from "./commands/interactive.js";
 import { templatesCommand } from "./commands/templates.js";
+import { configCommand } from "./commands/config.js";
 
 function printBanner(): void {
   console.log(chalk.cyan(`
@@ -39,5 +40,6 @@ program.addCommand(buildCommand);
 program.addCommand(previewCommand);
 program.addCommand(interactiveCommand);
 program.addCommand(templatesCommand);
+program.addCommand(configCommand);
 
 program.parse();

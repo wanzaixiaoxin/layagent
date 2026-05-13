@@ -1,63 +1,95 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import ora from "ora";
-import { writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname } from "node:path";
+import { GamePlanner, createModel } from "@layagen/core";
+import { getModelConfig } from "../config/index.js";
 
 export const createCommand = new Command("create")
-  .description("从自然语言描述创建游戏设计文档")
-  .argument("<description>", "游戏描述（自然语言）或使用 @<文件路径> 读取文件")
-  .option("-o, --output <path>", "输出文件路径", "./output/game-design.json")
-  .option("-g, --genre <genre>", "游戏类型")
-  .option("-c, --complexity <level>", "复杂度: simple, medium, complex", "medium")
+  .description("Create game design document from natural language description")
+  .argument("<description>", "Game description (natural language) or use @<file-path> to read from file")
+  .option("-o, --output <path>", "Output file path", "./output/game-design.json")
+  .option("-g, --genre <genre>", "Game genre")
+  .option("-c, --complexity <level>", "Complexity: simple, medium, complex", "medium")
+  .option("--mock", "Use mock data (no AI call)")
   .action(async (description: string, options) => {
-    const spinner = ora("正在分析游戏描述...").start();
+    const spinner = ora("Analyzing game description...").start();
 
     try {
-      // 模拟 planner 调用
-      await new Promise((r) => setTimeout(r, 1500));
+      let gameDoc: any;
 
-      const gameDoc = {
-        id: crypto.randomUUID(),
-        name: "示例游戏",
-        description: description,
-        genre: options.genre || "platformer",
-        dimension: "2d" as const,
-        targetPlatforms: ["h5"],
-        coreMechanics: {
-          input: "点击/触摸控制",
-          winCondition: "到达终点或达成目标分数",
-          loseCondition: "生命值归零",
-        },
-        sceneHierarchy: [
-          { name: "BackgroundLayer", type: "Sprite" },
-          { name: "GameLayer", type: "Sprite" },
-          { name: "UILayer", type: "Sprite" },
-        ],
-        resourceRequirements: {
-          characters: [],
-          backgrounds: [],
-          items: [],
-          effects: [],
-          uiElements: [],
-          audio: [],
-        },
-        estimatedComplexity: options.complexity,
-      };
+      if (options.mock) {
+        // Mock mode
+        gameDoc = createMockGameDoc(description, options);
+        spinner.succeed("Game design document generated! (mock mode)");
+      } else {
+        // Real AI call
+        const modelConfig = getModelConfig();
+        const model = createModel(modelConfig);
+        const planner = new GamePlanner({ model });
 
-      spinner.succeed("游戏设计文档生成完成！");
+        spinner.text = "Calling AI to plan game...";
+
+        // Read file description
+        let input = description;
+        if (description.startsWith("@")) {
+          const filePath = description.slice(1);
+          input = readFileSync(filePath, "utf-8");
+        }
+
+        gameDoc = await planner.plan(input, {
+          genre: options.genre,
+          complexity: options.complexity,
+        });
+
+        spinner.succeed("Game design document generated!");
+      }
 
       mkdirSync(dirname(options.output), { recursive: true });
       writeFileSync(options.output, JSON.stringify(gameDoc, null, 2));
 
-      console.log(chalk.green(`\n✓ 游戏设计文档已保存至: ${options.output}`));
-      console.log(chalk.blue(`\n游戏摘要:`));
-      console.log(`  名称: ${gameDoc.name}`);
-      console.log(`  类型: ${gameDoc.genre}`);
-      console.log(`  复杂度: ${gameDoc.estimatedComplexity}`);
+      console.log(chalk.green(`\nGame design document saved to: ${options.output}`));
+      console.log(chalk.blue(`\nGame Summary:`));
+      console.log(`  Name: ${gameDoc.name}`);
+      console.log(`  Genre: ${gameDoc.genre}`);
+      console.log(`  Complexity: ${gameDoc.estimatedComplexity}`);
+      console.log(chalk.yellow(`\nNext step: layagen prompts ${options.output}`));
     } catch (error) {
-      spinner.fail("生成失败");
-      console.error(chalk.red(error));
+      spinner.fail("Generation failed");
+      console.error(chalk.red((error as Error).message));
+      console.log(chalk.gray("\nTip: Use --mock flag for offline testing"));
+      console.log(chalk.gray("      Or run layagen config to configure AI model"));
       process.exit(1);
     }
   });
+
+function createMockGameDoc(description: string, options: any) {
+  return {
+    id: crypto.randomUUID(),
+    name: description.slice(0, 20),
+    description,
+    genre: options.genre || "platformer",
+    dimension: "2d" as const,
+    targetPlatforms: ["h5"],
+    coreMechanics: {
+      input: "Click/touch control",
+      winCondition: "Reach the finish or achieve target score",
+      loseCondition: "Health reaches zero",
+    },
+    sceneHierarchy: [
+      { name: "BackgroundLayer", type: "Sprite" },
+      { name: "GameLayer", type: "Sprite" },
+      { name: "UILayer", type: "Sprite" },
+    ],
+    resourceRequirements: {
+      characters: [],
+      backgrounds: [],
+      items: [],
+      effects: [],
+      uiElements: [],
+      audio: [],
+    },
+    estimatedComplexity: options.complexity,
+  };
+}

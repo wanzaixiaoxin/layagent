@@ -4,7 +4,7 @@
 import { homedir } from "node:os";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import type { ModelConfig, ModelProvider } from "@layagen/core";
+import { type ModelConfig, type ModelProvider, DEFAULT_MODELS } from "@layagen/core";
 
 export const CONFIG_DIR = join(homedir(), ".layagen");
 export const CONFIG_FILE = join(CONFIG_DIR, "config.json");
@@ -40,24 +40,10 @@ export function saveUserConfig(config: UserConfig): void {
 }
 
 /**
- * Get model configuration (priority: env vars > config file > default)
+ * Get model configuration (read from config file only)
  */
 export function getModelConfig(): ModelConfig {
-  // 1. Try loading from environment variables
-  const { loadConfigFromEnv, DEFAULT_MODELS } = require("@layagen/core") as {
-    loadConfigFromEnv: () => Partial<ModelConfig> | null;
-    DEFAULT_MODELS: Record<ModelProvider, { model: string; baseUrl?: string }>;
-  };
-  const envConfig = loadConfigFromEnv();
-
-  if (envConfig?.provider && envConfig?.apiKey) {
-    return {
-      ...DEFAULT_MODELS[envConfig.provider as ModelProvider],
-      ...envConfig,
-    } as ModelConfig;
-  }
-
-  // 2. Try loading from config file
+  // 1. Try loading from config file
   const userConfig = loadUserConfig();
   if (userConfig.model?.provider) {
     return {
@@ -66,12 +52,11 @@ export function getModelConfig(): ModelConfig {
     };
   }
 
-  // 3. Throw error prompting user to configure
+  // 2. Throw error prompting user to configure
   throw new Error(
-    "AI model configuration not found. Please configure via one of the following methods:\n" +
-    "  1. Set environment variable (e.g. OPENAI_API_KEY=sk-xxx)\n" +
-    "  2. Run `layagen config` for interactive configuration\n" +
-    "  3. Manually configure in ~/.layagen/config.json"
+    "AI model configuration not found. Please configure in ~/.layagen/config.json\n" +
+    "  1. Run `layagen config` for interactive configuration\n" +
+    "  2. Manually edit ~/.layagen/config.json"
   );
 }
 

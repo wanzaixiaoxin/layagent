@@ -63,6 +63,8 @@ async function interactiveConfig(): Promise<void> {
         { name: "Anthropic (Claude 3.5 Sonnet)", value: "anthropic" },
         { name: "Tongyi Qwen (Qwen-Max / Qwen-Turbo)", value: "qwen" },
         { name: "DeepSeek (DeepSeek-V3)", value: "deepseek" },
+        { name: "Zhipu GLM (GLM-4-Plus)", value: "glm" },
+        { name: "Moonshot Kimi (Kimi-Latest)", value: "kimi" },
         { name: "Ollama (Local deployment)", value: "ollama" },
         { name: "Custom OpenAI-compatible API", value: "custom" },
       ],
@@ -97,18 +99,16 @@ async function interactiveConfig(): Promise<void> {
   ]);
   answers.model = model || defaults.model;
 
-  // Custom API requires Base URL
-  if (provider === "custom" || provider === "ollama") {
-    const { baseUrl } = await inquirer.prompt([
-      {
-        type: "input",
-        name: "baseUrl",
-        message: "Base URL:",
-        default: defaults.baseUrl || "",
-      },
-    ]);
-    answers.baseUrl = baseUrl;
-  }
+  // Base URL: all providers support custom base URL (with default suggestion)
+  const { baseUrl } = await inquirer.prompt([
+    {
+      type: "input",
+      name: "baseUrl",
+      message: "Base URL (optional, leave empty for default):",
+      default: defaults.baseUrl || "",
+    },
+  ]);
+  answers.baseUrl = baseUrl || defaults.baseUrl;
 
   const { temperature } = await inquirer.prompt([
     {

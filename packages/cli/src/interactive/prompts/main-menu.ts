@@ -2,6 +2,7 @@ import inquirer from "inquirer";
 
 export type MenuAction =
   | "view-doc"
+  | "modify-desc"
   | "gen-prompts"
   | "gen-code"
   | "preview"
@@ -11,6 +12,7 @@ export type MenuAction =
 
 const mainMenuChoices = [
   { name: "📄  查看完整设计文档", value: "view-doc" },
+  { name: "📝  修改游戏描述", value: "modify-desc" },
   { name: "🎨  生成资产生成提示词", value: "gen-prompts" },
   { name: "💻  生成 LayaAir 代码", value: "gen-code" },
   { name: "🚀  构建并预览 (需要 MCP)", value: "preview" },

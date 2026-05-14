@@ -1,10 +1,10 @@
-import { generateObject, generateText, type LanguageModel } from "ai";
+import { generateText, type LanguageModel } from "ai";
 import {
   type GameDesignDoc,
   GameDesignDocSchema,
   type GameGenre,
-  slugify,
 } from "@layagen/shared";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -41,15 +41,8 @@ export class GamePlanner {
   async plan(input: string, options: PlanOptions = {}): Promise<GameDesignDoc> {
     const prompt = this.buildPrompt(input, options);
     
-    const { object } = await generateObject({
-      model: this.model,
-      system: this.systemPrompt,
-      prompt,
-      schema: GameDesignDocSchema,
-      output: "object",
-    });
-
-    const doc = GameDesignDocSchema.parse(object);
+    const json = await this.generateJson(prompt);
+    const doc = GameDesignDocSchema.parse(json);
     if (!doc.id) {
       doc.id = crypto.randomUUID();
     }
@@ -57,17 +50,12 @@ export class GamePlanner {
   }
 
   async refine(doc: GameDesignDoc, feedback: string): Promise<GameDesignDoc> {
-    const prompt = `Here is the current game design document:\n\n${JSON.stringify(doc, null, 2)}\n\nThe user has the following feedback for refinement:\n${feedback}\n\nPlease update the design document based on this feedback while maintaining the same structure and schema.`;
+    // Use compact JSON to reduce token usage
+    const compactDoc = JSON.stringify(doc);
+    const prompt = `Here is the current game design document (compact JSON):\n${compactDoc}\n\nThe user has the following feedback for refinement:\n${feedback}\n\nPlease update the design document based on this feedback while maintaining the same structure and schema. Output valid JSON only.`;
 
-    const { object } = await generateObject({
-      model: this.model,
-      system: this.systemPrompt,
-      prompt,
-      schema: GameDesignDocSchema,
-      output: "object",
-    });
-
-    return GameDesignDocSchema.parse(object);
+    const json = await this.generateJson(prompt);
+    return GameDesignDocSchema.parse(json);
   }
 
   summarize(doc: GameDesignDoc): string {
@@ -93,6 +81,28 @@ export class GamePlanner {
       `  - UI: ${doc.resourceRequirements.uiElements.length}`,
       `  - 音频: ${doc.resourceRequirements.audio.length}`,
     ].join("\n");
+  }
+
+  private async generateJson(prompt: string): Promise<unknown> {
+    const jsonSchema = zodToJsonSchema(GameDesignDocSchema, "GameDesignDoc");
+    const schemaDescription = JSON.stringify(jsonSchema, null, 2);
+    const fullPrompt = `${prompt}\n\nYou must output ONLY a valid JSON object that strictly follows this JSON Schema. Do not wrap in markdown code blocks. Do not include any explanatory text before or after the JSON. All fields marked as "required" must be present. Use only the allowed enum values where specified.\n\nJSON Schema:\n${schemaDescription}`;
+
+    const { text } = await generateText({
+      model: this.model,
+      system: this.systemPrompt,
+      prompt: fullPrompt,
+    });
+
+    // Extract JSON from response (handle markdown code blocks if present)
+    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/) || text.match(/(\{[\s\S]*\})/);
+    const jsonStr = jsonMatch ? jsonMatch[1].trim() : text.trim();
+
+    try {
+      return JSON.parse(jsonStr);
+    } catch (error) {
+      throw new Error(`Failed to parse AI response as JSON: ${(error as Error).message}\nResponse: ${text.slice(0, 500)}`);
+    }
   }
 
   private buildPrompt(input: string, options: PlanOptions): string {

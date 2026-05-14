@@ -152,8 +152,10 @@ const project = await generator.generateProject(doc);
 |--------|----------|----------|
 | OpenAI | `OPENAI_API_KEY` | gpt-4o, gpt-4 |
 | Anthropic | `ANTHROPIC_API_KEY` | claude-3-5-sonnet |
-| 通义千问 | `QWEN_API_KEY` | qwen-max |
+| 通义千问 | `DASHSCOPE_API_KEY` | qwen-max |
 | DeepSeek | `DEEPSEEK_API_KEY` | deepseek-chat |
+| 智谱 GLM | `GLM_API_KEY` | glm-4-plus, glm-4-flash |
+| Moonshot Kimi | `KIMI_API_KEY` | kimi-latest, kimi-k1 |
 
 ## 示例 / Examples
 

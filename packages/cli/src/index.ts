@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import { Command } from "commander";
 import chalk from "chalk";
 import { createCommand } from "./commands/create.js";

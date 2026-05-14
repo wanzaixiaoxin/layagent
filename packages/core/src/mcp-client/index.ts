@@ -1,9 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import {
-  type ResourceStructure,
   retryWithBackoff,
-  sleep,
 } from "@layagen/shared";
 
 export interface PrefabConfig {
@@ -107,7 +105,7 @@ export class LayaMCPClient {
 
   async buildProject(config: BuildConfig = {}): Promise<BuildResult> {
     return retryWithBackoff(async () => {
-      const result = await this.callTool("build_project", {
+      await this.callTool("build_project", {
         platform: config.platform || "web",
         minify: config.minify !== false,
         compressTexture: config.compressTexture !== false,
@@ -131,7 +129,7 @@ export class LayaMCPClient {
     });
   }
 
-  async organizeResources(structure: ResourceStructure): Promise<void> {
+  async organizeResources(structure: Record<string, unknown>): Promise<void> {
     return retryWithBackoff(async () => {
       await this.callTool("organize_resources", { structure });
     });

@@ -1,38 +1,14 @@
-import type { LanguageModel } from "ai";
+import { generateText, type LanguageModel } from "ai";
 import {
   type GameDesignDoc,
   type LayaProjectConfig,
   type GeneratedProject,
   LayaProjectConfigSchema,
   slugify,
-  interpolateTemplate,
 } from "@layagen/shared";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-function loadTemplate(name: string): string {
-  try {
-    return readFileSync(join(__dirname, "templates", `${name}.ts`), "utf-8");
-  } catch {
-    return "";
-  }
-}
-
-function loadJsonTemplate(name: string): Record<string, unknown> {
-  try {
-    const content = readFileSync(join(__dirname, "templates", `${name}.json`), "utf-8");
-    return JSON.parse(content);
-  } catch {
-    return {};
-  }
-}
 
 export interface CodeGeneratorOptions {
   model: LanguageModel;
-  templatesDir?: string;
 }
 
 export class CodeGenerator {
@@ -45,33 +21,17 @@ export class CodeGenerator {
   async generateProject(gameDoc: GameDesignDoc): Promise<GeneratedProject> {
     const config = this.generateProjectConfig(gameDoc);
     const scripts = await this.generateAllScripts(gameDoc);
-    const scenes = this.generateSceneConfigs(gameDoc);
+    const scenes = await this.generateAllSceneScripts(gameDoc);
     const resources = this.generateResourceList(gameDoc);
     const indexHtml = this.generateIndexHtml(gameDoc);
 
     return {
       config,
-      scripts,
-      scenes,
+      scripts: [...scripts, ...scenes],
+      scenes: this.generateSceneConfigs(gameDoc),
       resources,
       indexHtml,
     };
-  }
-
-  async generateScript(doc: GameDesignDoc, scriptName: string): Promise<string> {
-    const template = loadTemplate(scriptName);
-    if (template) {
-      return interpolateTemplate(template, {
-        gameName: doc.name,
-        genre: doc.genre,
-        description: doc.description,
-      });
-    }
-    return this.generateScriptFallback(doc, scriptName);
-  }
-
-  generateSceneConfig(doc: GameDesignDoc): Array<{ filename: string; content: string }> {
-    return this.generateSceneConfigs(doc);
   }
 
   generateProjectConfig(doc: GameDesignDoc): LayaProjectConfig {
@@ -93,26 +53,200 @@ export class CodeGenerator {
   }
 
   private async generateAllScripts(doc: GameDesignDoc) {
-    const scriptNames = [
-      "player-controller",
-      "game-manager",
-      "item-collector",
-      "obstacle",
-      "camera-follow",
+    const gameSummary = this.buildGameSummary(doc);
+    const scriptSpecs = this.inferScriptSpecs(doc);
+
+    // Generate scripts in parallel
+    const scriptPromises = scriptSpecs.map(async (spec) => {
+      const content = await this.generateScriptWithAI(gameSummary, spec);
+      return { filename: `${spec.id}.ts`, content };
+    });
+
+    return Promise.all(scriptPromises);
+  }
+
+  private async generateAllSceneScripts(doc: GameDesignDoc) {
+    const gameSummary = this.buildGameSummary(doc);
+
+    const scenePromises = doc.sceneHierarchy.map(async (scene) => {
+      const content = await this.generateSceneScriptWithAI(gameSummary, scene);
+      return { filename: `scene-${slugify(scene.name)}.ts`, content };
+    });
+
+    return Promise.all(scenePromises);
+  }
+
+  private async generateScriptWithAI(gameSummary: string, spec: ScriptSpec): Promise<string> {
+    const prompt = `You are an expert LayaAir TypeScript game developer.
+
+Game Context:
+${gameSummary}
+
+Your Task:
+Write a complete, production-ready TypeScript script for LayaAir engine.
+
+Script Details:
+- Script Name: ${spec.name}
+- File: ${spec.id}.ts
+- Purpose: ${spec.purpose}
+- Key Responsibilities: ${spec.responsibilities.join(", ")}
+
+Requirements:
+1. Use proper LayaAir imports: \`import { Laya } from "Laya"\`, \`import { Script } from "laya/components/Script"\`, etc.
+2. Extend Laya.Script or appropriate base class
+3. Include @property decorators for configurable fields
+4. Implement meaningful game logic (not just console.log)
+5. Include lifecycle methods: onAwake, onEnable, onUpdate, onDisable as needed
+6. Add JSDoc comments for public methods
+7. Use TypeScript with proper types
+8. The code should be runnable without modifications
+
+Output ONLY the TypeScript code, no markdown fences, no explanations.`;
+
+    const { text } = await generateText({
+      model: this.model,
+      prompt,
+      maxTokens: 2048,
+    });
+
+    return this.extractCode(text);
+  }
+
+  private async generateSceneScriptWithAI(gameSummary: string, scene: any): Promise<string> {
+    const childrenDesc = scene.children?.map((c: any) => `- ${c.name} (${c.type})${c.description ? `: ${c.description}` : ""}`).join("\n") || "None";
+
+    const prompt = `You are an expert LayaAir TypeScript game developer.
+
+Game Context:
+${gameSummary}
+
+Your Task:
+Write a complete scene controller script for LayaAir.
+
+Scene Details:
+- Scene Name: ${scene.name}
+- Type: ${scene.type || "2d"}
+- Child Elements:
+${childrenDesc}
+
+Requirements:
+1. Import: \`import { Laya } from "Laya"\`, \`import { Script } from "laya/components/Script"\`
+2. Extend Laya.Script
+3. In onAwake/onEnable: initialize the scene, find child nodes by name, set up event listeners
+4. Handle scene-specific logic (UI updates, spawn managers, etc.)
+5. Clean up in onDisable
+6. Output ONLY TypeScript code, no markdown, no explanations
+
+Scene Controller Class Name: ${scene.name}Scene`;
+
+    const { text } = await generateText({
+      model: this.model,
+      prompt,
+      maxTokens: 2048,
+    });
+
+    return this.extractCode(text);
+  }
+
+  private buildGameSummary(doc: GameDesignDoc): string {
+    const lines = [
+      `Game: ${doc.name}`,
+      `Genre: ${doc.genre}`,
+      `Dimension: ${doc.dimension}`,
+      `Description: ${doc.description}`,
+      "",
+      "Core Mechanics:",
+      `- Input: ${doc.coreMechanics.input}`,
+      `- Win: ${doc.coreMechanics.winCondition}`,
+      doc.coreMechanics.loseCondition ? `- Lose: ${doc.coreMechanics.loseCondition}` : "",
+      doc.coreMechanics.scoring ? `- Scoring: ${doc.coreMechanics.scoring}` : "",
+      "",
+      "Scenes:",
+      ...doc.sceneHierarchy.map((s) => `  - ${s.name} (${s.type})`),
+      "",
+      "Resources:",
+      `  - Characters: ${doc.resourceRequirements.characters.map((c) => c.name).join(", ")}`,
+      `  - Backgrounds: ${doc.resourceRequirements.backgrounds.map((b) => b.name).join(", ")}`,
+      `  - Items: ${doc.resourceRequirements.items.map((i) => i.name).join(", ")}`,
+      `  - Effects: ${doc.resourceRequirements.effects.map((e) => e.name).join(", ")}`,
+      `  - UI: ${doc.resourceRequirements.uiElements.map((u) => u.name).join(", ")}`,
+      `  - Audio: ${doc.resourceRequirements.audio.map((a) => a.name).join(", ")}`,
     ];
+    return lines.filter(Boolean).join("\n");
+  }
 
-    const scripts = [];
-    for (const name of scriptNames) {
-      const content = await this.generateScript(doc, name);
-      scripts.push({ filename: `${name}.ts`, content });
+  private inferScriptSpecs(doc: GameDesignDoc): ScriptSpec[] {
+    const specs: ScriptSpec[] = [];
+
+    // Game Manager is always needed
+    specs.push({
+      id: "game-manager",
+      name: "GameManager",
+      purpose: "Manage overall game state, score, lives, game loop, and scene transitions",
+      responsibilities: ["Track score and game state", "Handle win/lose conditions", "Manage scene transitions", "Coordinate between systems"],
+    });
+
+    // Input/Player controller if game has player interaction
+    if (doc.coreMechanics.input && !doc.coreMechanics.input.includes("idle") && !doc.coreMechanics.input.includes("auto")) {
+      specs.push({
+        id: "player-controller",
+        name: "PlayerController",
+        purpose: "Handle player input and control the main playable character or interaction",
+        responsibilities: ["Process touch/mouse/keyboard input", "Move player character", "Handle interactions"],
+      });
     }
 
-    for (const scene of doc.sceneHierarchy) {
-      const content = this.generateSceneScript(doc, scene.name);
-      scripts.push({ filename: `scene-${slugify(scene.name)}.ts`, content });
+    // Item/Collection system if there are items
+    if (doc.resourceRequirements.items.length > 0) {
+      specs.push({
+        id: "item-manager",
+        name: "ItemManager",
+        purpose: "Manage collectible items, spawning, and collection logic",
+        responsibilities: ["Spawn items", "Handle collection events", "Update inventory/collection state"],
+      });
     }
 
-    return scripts;
+    // Character behavior for each character type
+    if (doc.resourceRequirements.characters.length > 0) {
+      specs.push({
+        id: "character-behavior",
+        name: "CharacterBehavior",
+        purpose: "Handle character AI, animations, and interactions",
+        responsibilities: ["Character state machine", "Animation control", "AI behavior"],
+      });
+    }
+
+    // UI Manager
+    if (doc.resourceRequirements.uiElements.length > 0) {
+      specs.push({
+        id: "ui-manager",
+        name: "UIManager",
+        purpose: "Manage all UI elements, HUD, menus, and user interface interactions",
+        responsibilities: ["Update HUD", "Handle button clicks", "Show/hide panels", "Update score/lives display"],
+      });
+    }
+
+    // Audio Manager
+    if (doc.resourceRequirements.audio.length > 0) {
+      specs.push({
+        id: "audio-manager",
+        name: "AudioManager",
+        purpose: "Manage background music and sound effects",
+        responsibilities: ["Play BGM", "Play SFX", "Volume control"],
+      });
+    }
+
+    // Effects/Particle system
+    if (doc.resourceRequirements.effects.length > 0) {
+      specs.push({
+        id: "effect-manager",
+        name: "EffectManager",
+        purpose: "Manage visual effects and particle systems",
+        responsibilities: ["Spawn effects", "Play particle animations", "Clean up effects"],
+      });
+    }
+
+    return specs;
   }
 
   private generateSceneConfigs(doc: GameDesignDoc) {
@@ -135,7 +269,7 @@ export class CodeGenerator {
 
   private generateResourceList(doc: GameDesignDoc) {
     const resources: Array<{ path: string; placeholder: boolean }> = [];
-    
+
     for (const char of doc.resourceRequirements.characters) {
       resources.push({ path: `res/characters/${char.id}.png`, placeholder: true });
     }
@@ -157,7 +291,7 @@ export class CodeGenerator {
 
   private generateIndexHtml(doc: GameDesignDoc): string {
     return `<!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -176,49 +310,19 @@ export class CodeGenerator {
 </html>`;
   }
 
-  private generateSceneScript(doc: GameDesignDoc, sceneName: string): string {
-    return `import { Laya } from "Laya";
-import { Scene } from "laya/display/Scene";
-
-/**
- * ${sceneName} - Auto-generated scene script for ${doc.name}
- */
-export class ${sceneName}Scene extends Laya.Script {
-  
-  onAwake(): void {
-    console.log("[${sceneName}] Scene loaded");
+  private extractCode(text: string): string {
+    // Remove markdown code fences if present
+    const match = text.match(/```(?:typescript|ts)?\s*([\s\S]*?)```/);
+    if (match) {
+      return match[1].trim();
+    }
+    return text.trim();
   }
+}
 
-  onEnable(): void {
-    // Scene initialization
-  }
-
-  onDisable(): void {
-    // Cleanup
-  }
-}`;
-  }
-
-  private async generateScriptFallback(doc: GameDesignDoc, scriptName: string): Promise<string> {
-    return `import { Laya } from "Laya";
-import { Script } from "Laya/components/Script";
-
-/**
- * ${scriptName} - Auto-generated for ${doc.name}
- * Game: ${doc.genre} | ${doc.description.slice(0, 50)}...
- */
-export class ${scriptName.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join("")} extends Laya.Script {
-  
-  /** @property {string} description Component description */
-  public description: string = "Auto-generated component";
-
-  onAwake(): void {
-    console.log("[${scriptName}] Component loaded");
-  }
-
-  onUpdate(): void {
-    // Update logic
-  }
-}`;
-  }
+interface ScriptSpec {
+  id: string;
+  name: string;
+  purpose: string;
+  responsibilities: string[];
 }

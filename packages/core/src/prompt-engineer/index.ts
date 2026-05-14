@@ -1,4 +1,4 @@
-import { generateText, generateObject, type LanguageModel } from "ai";
+import { generateText, type LanguageModel } from "ai";
 import {
   type GameDesignDoc,
   type AssetPromptPackage,
@@ -6,8 +6,6 @@ import {
   type AssetCategory,
   type ArtStyle,
   AssetPromptPackageSchema,
-  AssetCategorySchema,
-  AssetPromptSchema,
   ArtStyleSchema,
 } from "@layagen/shared";
 import { readFileSync } from "node:fs";
@@ -118,9 +116,9 @@ export class PromptEngine {
         basePrompt: parsed.basePrompt || `${resource.name}, ${resource.description}`,
         negativePrompt: parsed.negativePrompt,
         technicalSpec: {
-          resolution: resource.type === "background" ? "1920x1080" : "256x256",
+          resolution: (resource.type as string) === "background" ? "1920x1080" : "256x256",
           format: "PNG",
-          transparent: resource.type !== "background",
+          transparent: (resource.type as string) !== "background",
           spriteSheetLayout: resource.type === "sprite_sheet" ? "1x8 horizontal" : undefined,
           ...parsed.technicalSpec,
         },

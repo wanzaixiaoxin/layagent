@@ -9,7 +9,7 @@ import {
   getModelConfig,
   CONFIG_FILE,
 } from "../config/index.js";
-import { getAvailableProviders, testModel, DEFAULT_MODELS, type ModelProvider } from "@layagen/core";
+import { getAvailableProviders, testModel, DEFAULT_MODELS, type ModelProvider, type ModelConfig } from "@layagen/core";
 
 export const configCommand = new Command("config")
   .description("Configure AI model parameters")
@@ -62,7 +62,7 @@ async function interactiveConfig(): Promise<void> {
         { name: "OpenAI (GPT-4o / GPT-4o-mini)", value: "openai" },
         { name: "Anthropic (Claude 3.5 Sonnet)", value: "anthropic" },
         { name: "Tongyi Qwen (Qwen-Max / Qwen-Turbo)", value: "qwen" },
-        { name: "DeepSeek (DeepSeek-V3)", value: "deepseek" },
+        { name: "DeepSeek (DeepSeek-V4)", value: "deepseek" },
         { name: "Zhipu GLM (GLM-4-Plus)", value: "glm" },
         { name: "Moonshot Kimi (Kimi-Latest)", value: "kimi" },
         { name: "Ollama (Local deployment)", value: "ollama" },

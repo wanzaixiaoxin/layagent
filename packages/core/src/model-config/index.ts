@@ -29,7 +29,7 @@ export const DEFAULT_MODELS: Record<ModelProvider, { model: string; baseUrl?: st
   openai: { model: "gpt-4o-mini" },
   anthropic: { model: "claude-3-5-sonnet-latest" },
   qwen: { model: "qwen-max", baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1" },
-  deepseek: { model: "deepseek-chat", baseUrl: "https://api.deepseek.com/v1" },
+  deepseek: { model: "deepseek-v4-flash", baseUrl: "https://api.deepseek.com/v1" },
   glm: { model: "glm-4-plus", baseUrl: "https://open.bigmodel.cn/api/paas/v4" },
   kimi: { model: "kimi-latest", baseUrl: "https://api.moonshot.cn/v1" },
   ollama: { model: "llama3.1", baseUrl: "http://localhost:11434/api" },
